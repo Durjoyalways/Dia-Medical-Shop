@@ -1,5 +1,6 @@
 import { AuthProvider } from "@/context/AuthContext";
 import Navbar from "@/components/Navbar/Navbar";
+import Footer from "@/components/Footer/Footer"; // ১. ফুটার ইম্পোর্ট করুন
 import "./globals.css";
 
 export default function RootLayout({
@@ -9,16 +10,20 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
-        {/* ১. AuthProvider অবশ্যই সবার বাইরে থাকবে */}
+      <body className="flex flex-col min-h-screen"> 
+        {/* AuthProvider সবার বাইরে থাকবে */}
         <AuthProvider>
           
-          {/* ২. Navbar এখন AuthProvider এর ভেতরে, তাই সে useAuth পাবে */}
+          {/* Navbar এখন AuthProvider এর ভেতরে */}
           <Navbar /> 
           
-          <main>
+          {/* flex-grow নিশ্চিত করবে যে কন্টেন্ট কম থাকলেও ফুটার সবসময় নিচে থাকবে */}
+          <main className="flex-grow">
             {children}
           </main>
+
+          {/* ২. ফুটারটি এখানে বসিয়ে দিন */}
+          <Footer />
 
         </AuthProvider>
       </body>

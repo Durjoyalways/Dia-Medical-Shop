@@ -8,14 +8,18 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     const fetchStats = async () => {
-      const meds = await getDocs(collection(db, "medicines"));
-      const orders = await getDocs(collection(db, "orders"));
-      const users = await getDocs(collection(db, "users"));
-      setStats({
-        medicines: meds.size,
-        orders: orders.size,
-        users: users.size
-      });
+      try {
+        const meds = await getDocs(collection(db, "medicines"));
+        const orders = await getDocs(collection(db, "orders"));
+        const users = await getDocs(collection(db, "users"));
+        setStats({
+          medicines: meds.size,
+          orders: orders.size,
+          users: users.size
+        });
+      } catch (error) {
+        console.error("Error fetching stats:", error);
+      }
     };
     fetchStats();
   }, []);
@@ -33,19 +37,17 @@ export default function AdminDashboard() {
           { label: "Registered Users", value: stats.users, color: "bg-purple-500" },
         ].map((item, idx) => (
           <div key={idx} className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 relative overflow-hidden group">
-            <div className={`absolute top-0 right-0 w-24 h-24 ${item.color} opacity-10 rounded-bl-full`}></div>
+            <div className={`absolute top-0 right-0 w-24 h-24 ${item.color} opacity-10 rounded-bl-full transition-all group-hover:scale-110`}></div>
             <p className="text-slate-500 font-bold uppercase text-xs tracking-widest">{item.label}</p>
-            <h2 className="text-5xl font-black text-slate-800 mt-4">{item.value}</h2>
+            <h2 className="text-5xl font-black text-slate-800 mt-4 tracking-tighter">
+              {stats.medicines === 0 && stats.orders === 0 && stats.users === 0 ? (
+                <span className="loading loading-spinner loading-md text-slate-200"></span>
+              ) : (
+                item.value
+              )}
+            </h2>
           </div>
         ))}
-      </div>
-
-      <div className="mt-12 bg-[#0f172a] rounded-[3rem] p-10 text-white">
-        <h3 className="text-xl font-bold mb-4 text-emerald-400">Quick Actions</h3>
-        <div className="flex gap-4 flex-wrap">
-          <a href="/add-medicine" className="bg-white/10 hover:bg-emerald-500 px-6 py-3 rounded-xl transition-all font-bold">Add New Medicine</a>
-          <a href="/all-orders" className="bg-white/10 hover:bg-emerald-500 px-6 py-3 rounded-xl transition-all font-bold">View All Orders</a>
-        </div>
       </div>
     </div>
   );

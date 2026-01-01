@@ -3,6 +3,8 @@ import React from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import NavLinks from "./NavLinks";
+import AdminMenu from "./AdminMenu"; 
+import UserMenu from "./UserMenu"; // ইমপোর্ট নিশ্চিত করা হলো
 
 const Navbar: React.FC = () => {
   const { user, logout, loading, role } = useAuth();
@@ -12,30 +14,26 @@ const Navbar: React.FC = () => {
       <input id="my-drawer" type="checkbox" className="drawer-toggle" />
       
       <div className="drawer-content flex flex-col">
-        {/* --- MAIN NAVBAR --- */}
         <nav className="bg-[#0f172a] text-white sticky top-0 z-50 shadow-2xl border-b border-white/10">
           <div className="max-w-7xl mx-auto px-4 lg:px-8">
             <div className="flex items-center h-20 gap-4 lg:gap-8">
               
-              {/* --- 1. LEFT: LOGO --- */}
+              {/* --- 1. LOGO --- */}
               <div className="flex items-center shrink-0">
                 <label htmlFor="my-drawer" className="btn btn-ghost lg:hidden text-emerald-500 mr-2 p-1">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
                   </svg>
                 </label>
-
                 <Link href="/" className="flex items-center group">
                   <div className="bg-emerald-500 w-9 h-9 rounded-lg flex items-center justify-center rotate-45 shadow-lg shadow-emerald-500/20 group-hover:scale-110 transition-transform">
                     <span className="-rotate-45 font-black text-white text-xl">+</span>
                   </div>
-                  <span className="ml-3 text-2xl font-black tracking-[0.15em] text-white hidden sm:block">
-                    DIA
-                  </span>
+                  <span className="ml-3 text-2xl font-black tracking-[0.15em] text-white hidden sm:block">DIA</span>
                 </Link>
               </div>
 
-              {/* --- 2. CENTER: SEARCH BOX --- */}
+              {/* --- 2. SEARCH --- */}
               <div className="flex-1 flex justify-center">
                 <div className="relative w-full max-w-lg group">
                   <input
@@ -51,7 +49,7 @@ const Navbar: React.FC = () => {
                 </div>
               </div>
 
-              {/* --- 3. RIGHT: AUTH SECTION --- */}
+              {/* --- 3. AUTH & MENU --- */}
               <div className="flex items-center gap-4 lg:gap-8 shrink-0">
                 <ul className="hidden lg:flex items-center gap-8">
                   <NavLinks />
@@ -80,53 +78,18 @@ const Navbar: React.FC = () => {
                         </div>
                       </div>
                       
-                      {/* --- Dropdown Menu --- */}
-                      <ul tabIndex={0} className="mt-3 z-[1] p-2 shadow-2xl menu menu-sm dropdown-content bg-[#0f172a] border border-slate-800 rounded-2xl w-56 space-y-1">
-                        <li className="p-2 border-b border-slate-800 mb-2">
-                          <span className="text-[10px] uppercase font-black text-slate-500 tracking-widest">Account info</span>
-                          <p className="text-xs text-emerald-400 truncate">{user.email}</p>
-                        </li>
-
-                        <li><Link href="/profile" className="hover:bg-slate-800 rounded-xl py-2.5">👤 My Profile</Link></li>
-                        
-                        {/* অ্যাডমিন কন্ডিশন */}
-                        {role === "admin" ? (
-                          <>
-                            <div className="h-[1px] bg-slate-800 my-1"></div>
-                            <li className="menu-title text-[10px] text-emerald-500 font-black uppercase px-4 py-2">Management</li>
-                            <li><Link href="/admin-dashboard" className="hover:bg-emerald-500/10 text-emerald-400 font-bold rounded-xl py-2.5">📊 Dashboard</Link></li>
-                            <li><Link href="/add-medicine" className="hover:bg-emerald-500/10 text-emerald-400 font-bold rounded-xl py-2.5">💊 Add Medicine</Link></li>
-                            <li><Link href="/all-orders" className="hover:bg-emerald-500/10 text-emerald-400 font-bold rounded-xl py-2.5">📦 All Orders</Link></li>
-                          </>
-                        ) : (
-                          <>
-                            <li><Link href="/cart" className="hover:bg-slate-800 rounded-xl py-2.5">🛒 My Cart</Link></li>
-                            <li><Link href="/my-orders" className="hover:bg-slate-800 rounded-xl py-2.5">🛍 My Orders</Link></li>
-                          </>
-                        )}
-                        
-                        <div className="h-[1px] bg-slate-800 my-1"></div>
-                        <li>
-                          <button 
-                            onClick={() => logout()} 
-                            className="text-red-400 hover:bg-red-500/10 hover:text-red-500 rounded-xl py-2.5 font-black mt-1 w-full text-left"
-                          >
-                            Sign Out System
-                          </button>
-                        </li>
-                      </ul>
+                      {/* ড্রপডাউন কন্টেন্ট - এখানে লজিক আপডেট করা হয়েছে */}
+                      <div tabIndex={0} className="dropdown-content">
+                         {role === "admin" ? <AdminMenu /> : <UserMenu />}
+                      </div>
                     </div>
                   </div>
                 ) : (
-                  <Link 
-                    href="/login" 
-                    className="bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-2.5 rounded-xl font-black text-sm transition-all shadow-lg shadow-emerald-600/20 active:scale-95 uppercase tracking-wider"
-                  >
+                  <Link href="/login" className="bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-2.5 rounded-xl font-black text-sm uppercase tracking-wider transition-all shadow-lg shadow-emerald-600/20 active:scale-95">
                     Login
                   </Link>
                 )}
               </div>
-
             </div>
           </div>
         </nav>
@@ -152,15 +115,22 @@ const Navbar: React.FC = () => {
             
             {user && role === "admin" && (
               <div className="mt-4 pt-4 border-t border-slate-800 space-y-2">
-                <p className="text-[10px] font-black text-slate-500 uppercase ml-4 mb-2 tracking-widest">Admin Menu</p>
-                <li><Link href="/admin-dashboard" className="block p-4 hover:bg-emerald-500 rounded-2xl font-bold transition-all">📊 Dashboard</Link></li>
-                <li><Link href="/add-medicine" className="block p-4 hover:bg-emerald-500 rounded-2xl font-bold transition-all">💊 Add Medicine</Link></li>
+                <p className="text-[10px] font-black text-slate-500 uppercase ml-4 mb-2 tracking-widest">Admin Actions</p>
+                <li><Link href="/admin/admin-dashboard" className="block p-4 hover:bg-emerald-500 hover:text-[#0f172a] rounded-2xl font-bold transition-all">📊 Dashboard</Link></li>
+                <li><Link href="/admin/add-medicine" className="block p-4 hover:bg-emerald-500 hover:text-[#0f172a] rounded-2xl font-bold transition-all">💊 Add Medicine</Link></li>
+                <li><Link href="/admin/all-orders" className="block p-4 hover:bg-emerald-500 hover:text-[#0f172a] rounded-2xl font-bold transition-all">📦 All Orders</Link></li>
               </div>
             )}
 
             {!user && (
               <li className="list-none pt-6 border-t border-slate-800 mt-4">
                 <Link href="/login" className="bg-emerald-500 text-white text-center py-4 rounded-2xl font-black block shadow-lg">Login ➜</Link>
+              </li>
+            )}
+            
+            {user && (
+              <li className="mt-auto list-none">
+                 <button onClick={() => logout()} className="w-full text-left p-4 text-red-400 font-bold hover:bg-red-500/10 rounded-2xl mt-4">🛑 Logout System</button>
               </li>
             )}
           </ul>

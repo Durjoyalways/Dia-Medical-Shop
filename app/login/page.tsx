@@ -26,16 +26,23 @@ export default function LoginPage() {
       // Firestore থেকে Role চেক করা
       const userDoc = await getDoc(doc(db, "users", user.uid));
       
-      if (userDoc.exists()) {
-        const role = userDoc.data().role;
-        if (role === "admin") {
-          router.push("/admin-dashboard");
-        } else {
-          router.push("/");
-        }
-      } else {
-        setError("User profile not found.");
-      }
+// LoginPage এর handleLogin ফাংশনের ভেতর এই অংশটুকু ঠিক করুন
+if (userDoc.exists()) {
+  const role = userDoc.data().role;
+  if (role === "admin") {
+    // আপনার ফোল্ডার স্ট্রাকচার অনুযায়ী সঠিক পাথ
+    router.push("/admin/admin-dashboard"); 
+  } else {
+    router.push("/medicines");
+  }
+} else {
+  // যদি Firestore-এ ডাটা না থাকে তবুও ইমেইল দিয়ে চেক করতে পারেন (Back-up লজিক)
+  if (user.email === "admin@gmail.com") {
+    router.push("/admin/admin-dashboard");
+  } else {
+    router.push("/medicines");
+  }
+}
     } catch (err: any) {
       setError(err.message.includes("auth/user-not-found") ? "User not found" : "Invalid email or password");
     } finally {
