@@ -1,20 +1,76 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react"; // useRef যোগ করা হয়েছে
 import { db } from "@/lib/firebase";
-import { collection, query, where, orderBy, onSnapshot } from "firebase/firestore";
+import { collection, query, where, orderBy, onSnapshot, doc, updateDoc, getDoc } from "firebase/firestore";
 import { useAuth } from "@/context/AuthContext";
-import { Package, Clock, CheckCircle, Truck, AlertCircle, ShoppingBag } from "lucide-react";
+import { Clock, ShoppingBag } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import Swal from "sweetalert2";
 
 export default function MyOrders() {
   const { user } = useAuth();
+  const searchParams = useSearchParams();
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const hasUpdated = useRef(false); // একই আপডেট বারবার হওয়া রোধ করতে
 
+  // ১. পেমেন্ট সাকসেস হ্যান্ডেল করার জন্য useEffect
+  useEffect(() => {
+    const paymentStatus = searchParams.get("payment");
+    const tranId = searchParams.get("tranId");
+
+    const updatePaymentStatus = async () => {
+      // যদি সাকসেস হয় এবং আমরা আগে আপডেট না করে থাকি
+      if (paymentStatus === "success" && tranId && !hasUpdated.current) {
+        hasUpdated.current = true; // ফ্ল্যাগ সেট করা হলো
+        
+        try {
+          const orderRef = doc(db, "orders", tranId);
+          const orderSnap = await getDoc(orderRef);
+
+          if (orderSnap.exists()) {
+            // শুধুমাত্র যদি আগে থেকে "Paid" না থাকে তবেই আপডেট করবে
+            if (orderSnap.data().paymentStatus !== "Paid") {
+              await updateDoc(orderRef, {
+                paymentStatus: "Paid",
+                status: "Processing"
+              });
+            }
+
+            Swal.fire({
+              title: "Payment Successful!",
+              text: "Your order has been confirmed and is being processed.",
+              icon: "success",
+              confirmButtonColor: "#10b981",
+              background: "#ffffff",
+              borderRadius: "2rem"
+            });
+          }
+          
+          // URL পরিষ্কার করা (যাতে পেজ রিফ্রেশ করলে বারবার এলার্ট না আসে)
+          window.history.replaceState(null, "", "/user/my-orders");
+        } catch (error) {
+          console.error("Firestore Update Error:", error);
+        }
+      } else if (paymentStatus === "failed") {
+        Swal.fire({
+          title: "Payment Failed",
+          text: "Something went wrong with the transaction. Please try again.",
+          icon: "error",
+          confirmButtonColor: "#ef4444",
+        });
+        window.history.replaceState(null, "", "/user/my-orders");
+      }
+    };
+
+    updatePaymentStatus();
+  }, [searchParams]);
+
+  // ২. অর্ডার ডেটা ফেচ করার জন্য useEffect (Real-time listener)
   useEffect(() => {
     if (!user) return;
 
-    // ইনডেক্সটি এখন Enabled, তাই এই কুয়েরিটি পারফেক্টলি কাজ করবে
     const q = query(
       collection(db, "orders"),
       where("userId", "==", user.uid),
@@ -36,16 +92,17 @@ export default function MyOrders() {
     return () => unsubscribe();
   }, [user]);
 
-const getStatusStyle = (status: string) => {
+  const getStatusStyle = (status: string) => {
     switch (status) {
       case "Pending": return "bg-amber-500/10 text-amber-500 border-amber-500/20";
       case "Processing": return "bg-blue-500/10 text-blue-500 border-blue-500/20";
-      case "Shipped": return "bg-indigo-500/10 text-indigo-500 border-indigo-500/20"; // শিপড এর জন্য নীল/বেগুনি
+      case "Shipped": return "bg-indigo-500/10 text-indigo-500 border-indigo-500/20";
       case "Delivered": return "bg-emerald-500/10 text-emerald-500 border-emerald-500/20";
-      case "Cancelled": return "bg-red-500/10 text-red-500 border-red-500/20"; // ক্যান্সেল এর জন্য লাল
+      case "Cancelled": return "bg-red-500/10 text-red-500 border-red-500/20";
       default: return "bg-slate-500/10 text-slate-500 border-slate-500/20";
     }
   };
+
   if (loading) return (
     <div className="flex flex-col items-center justify-center min-h-[60vh]">
       <span className="loading loading-ring loading-lg text-emerald-500"></span>
@@ -54,10 +111,10 @@ const getStatusStyle = (status: string) => {
   );
 
   return (
-    <div className="max-w-5xl mx-auto p-6 lg:p-12 min-h-screen">
+    <div className="max-w-5xl mx-auto p-6 lg:p-12 min-h-screen bg-slate-50/30">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-12">
         <div>
-          <h1 className="text-4xl font-black text-slate-800 uppercase tracking-tighter">
+          <h1 className="text-4xl font-black text-slate-800 uppercase tracking-tighter italic">
             Order <span className="text-emerald-500">History</span>
           </h1>
           <p className="text-slate-400 font-medium mt-1">Track and manage your medical supplies</p>
@@ -67,7 +124,7 @@ const getStatusStyle = (status: string) => {
             <p className="text-[10px] font-black text-slate-400 uppercase">Total Orders</p>
             <p className="font-black text-xl text-slate-800">{orders.length}</p>
           </div>
-          <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
+          <div className="w-10 h-10 bg-[#0f172a] rounded-xl flex items-center justify-center text-emerald-400 shadow-lg shadow-slate-200">
             <ShoppingBag size={20} />
           </div>
         </div>
@@ -76,27 +133,30 @@ const getStatusStyle = (status: string) => {
       {orders.length > 0 ? (
         <div className="grid grid-cols-1 gap-6">
           {orders.map((order) => (
-            <div key={order.id} className="group bg-white border border-slate-100 p-6 md:p-8 rounded-[2.5rem] hover:shadow-xl hover:shadow-slate-200/50 transition-all duration-300">
+            <div key={order.id} className="group bg-white border border-slate-100 p-6 md:p-8 rounded-[2.5rem] hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-500">
               <div className="flex flex-col lg:flex-row justify-between gap-8">
                 
                 {/* Order Meta */}
                 <div className="space-y-4">
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
                     <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${getStatusStyle(order.status)}`}>
                       {order.status}
                     </span>
+                    <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${order.paymentStatus === 'Paid' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-slate-500/10 text-slate-400 border-slate-200'}`}>
+                      {order.paymentStatus || "Unpaid"}
+                    </span>
                     <span className="text-xs text-slate-400 font-bold tracking-tight">
-                      {order.createdAt?.toDate().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      {order.createdAt?.toDate ? order.createdAt.toDate().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : "Recently"}
                     </span>
                   </div>
                   <h3 className="text-lg font-black text-slate-800 uppercase tracking-tight">
                     Order ID: <span className="text-slate-400 font-mono text-sm ml-1 uppercase">#{order.id.slice(0, 10)}</span>
                   </h3>
                   
-                  {/* Item Preview */}
+                  {/* Items Preview */}
                   <div className="flex -space-x-3 overflow-hidden pt-2">
                     {order.items?.map((item: any, i: number) => (
-                      <div key={i} className="inline-block h-10 w-10 rounded-xl ring-4 ring-white bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-600 border border-slate-200">
+                      <div key={i} title={item.name} className="inline-block h-10 w-10 rounded-xl ring-4 ring-white bg-slate-50 flex items-center justify-center text-[10px] font-black text-slate-500 border border-slate-100 uppercase">
                         {item.name.charAt(0)}
                       </div>
                     ))}
@@ -111,9 +171,9 @@ const getStatusStyle = (status: string) => {
                   </div>
                   <Link 
                     href={`/user/my-orders/${order.id}`}
-                    className="bg-slate-800 text-white px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-emerald-500 transition-all active:scale-95 shadow-lg shadow-slate-800/20"
+                    className="bg-[#0f172a] text-white px-8 py-3 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-emerald-500 transition-all active:scale-95 shadow-xl shadow-slate-200"
                   >
-                    Details
+                    View Details
                   </Link>
                 </div>
 
@@ -127,7 +187,7 @@ const getStatusStyle = (status: string) => {
             <Clock size={48} />
           </div>
           <h2 className="text-2xl font-black text-slate-800 mb-2 uppercase tracking-tighter">No Orders Yet</h2>
-          <p className="text-slate-400 mb-8 font-medium">Your prescriptions are waiting for you!</p>
+          <p className="text-slate-400 mb-8 font-medium">Your medical supplies are just a click away!</p>
           <Link href="/medicines" className="inline-block bg-emerald-500 text-[#0f172a] px-10 py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-[#0f172a] hover:text-white transition-all shadow-xl shadow-emerald-500/20">
             Explore Pharmacy
           </Link>
