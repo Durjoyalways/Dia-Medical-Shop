@@ -24,7 +24,18 @@ export default function MedicinesPage() {
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
 
-  const categories = ["All", "Medicine", "Diaper", "HealthCare", "Surgical"];
+// MedicinesPage এর ভেতরে এই অ্যারেটি রিপ্লেস করুন
+const categories = [
+  "All", 
+  "Medicine", 
+  "syrup", 
+  "baby-mother-care", 
+  "diabetic-care",
+  "personal-care", 
+  "otc-medicine", 
+  "family-planning", 
+  "medical-devices"
+];
 
   useEffect(() => {
     setLoading(true);

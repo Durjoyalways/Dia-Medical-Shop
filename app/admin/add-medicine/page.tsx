@@ -21,13 +21,25 @@ export default function AddMedicine() {
   const [formData, setFormData] = useState({
     name: "",
     price: "",
-    category: "Medicine",
+    category: "", // ডিফল্ট খালি রাখা হয়েছে ভ্যালিডেশনের জন্য
     imageUrl: "",
     description: "",
   });
 
   const [variants, setVariants] = useState<string[]>([]);
   const [variantInput, setVariantInput] = useState("");
+
+// categoryOptions অ্যারেতে এটি আপডেট করুন
+const categoryOptions = [
+  { label: "💊 Medicine", value: "medicine" },
+  { label: "🥤 Syrup & Liquid", value: "syrup" },
+  { label: "👶 Baby & Mother Care", value: "baby-mother-care" },
+  { label: "✨ Personal Care", value: "personal-care" }, // নতুন যুক্ত
+  { label: "🩸 Diabetic Care", value: "diabetic-care" },
+  { label: "🩹 OTC Medicine", value: "otc-medicine" },
+  { label: "🛡️ Family Planning", value: "family-planning" },
+  { label: "🏥 Medical Devices", value: "medical-devices" },
+];
 
   const fetchMedicines = async () => {
     setLoadingList(true);
@@ -67,6 +79,8 @@ export default function AddMedicine() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.imageUrl) return alert("Upload an image first!");
+    if (!formData.category) return alert("Please select a category!");
+    
     setLoading(true);
     try {
       await addDoc(collection(db, "medicines"), {
@@ -77,7 +91,7 @@ export default function AddMedicine() {
       });
       setSuccess(true);
       fetchMedicines();
-      setFormData({ name: "", price: "", category: "Medicine", imageUrl: "", description: "" });
+      setFormData({ name: "", price: "", category: "", imageUrl: "", description: "" });
       setVariants([]);
       setTimeout(() => setSuccess(false), 3000);
     } catch (error) { console.error(error); } finally { setLoading(false); }
@@ -114,10 +128,8 @@ export default function AddMedicine() {
           
           {/* LEFT: FORM SECTION */}
           <div className="xl:col-span-3">
-            {/* 🔥 Form Background with Premium Gradient & Shadow */}
             <form onSubmit={handleSubmit} className="space-y-8 bg-white border border-slate-100 p-8 md:p-12 rounded-[2.5rem] shadow-[0_20px_50px_rgba(79,70,229,0.1)] sticky top-10 overflow-hidden relative">
               
-              {/* Decorative Accent */}
               <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-50 rounded-full -mr-16 -mt-16 -z-0"></div>
 
               <div className="relative z-10 flex items-center gap-2 mb-2">
@@ -134,11 +146,12 @@ export default function AddMedicine() {
 
                 <div className="space-y-2">
                   <label className="text-[11px] font-black text-slate-400 uppercase tracking-widest ml-4 italic">Category</label>
-                  <select value={formData.category} className="w-full px-6 py-4 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-indigo-500 transition-all outline-none font-bold text-slate-700 shadow-inner cursor-pointer"
+                  <select required value={formData.category} className="w-full px-6 py-4 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-indigo-500 transition-all outline-none font-bold text-slate-700 shadow-inner cursor-pointer"
                     onChange={(e) => setFormData({...formData, category: e.target.value})}>
-                    <option value="Medicine">💊 Medicine</option>
-                    <option value="Diaper">👶 Diaper</option>
-                    <option value="HealthCare">🛡️ Health Care</option>
+                    <option value="">Select Category</option>
+                    {categoryOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -163,7 +176,7 @@ export default function AddMedicine() {
                 </div>
               </div>
 
-              {/* Variant Box with Color Accent */}
+              {/* Variant Box */}
               <div className="p-8 bg-indigo-50/50 border border-indigo-100/50 rounded-[2rem]">
                 <label className="text-[10px] font-black text-indigo-600 uppercase tracking-widest block mb-4">
                   Product Variations (Specs)
@@ -197,7 +210,6 @@ export default function AddMedicine() {
                 </div>
               </div>
 
-              {/* Submit Button with Success State Color */}
               <button disabled={loading || uploading || success} type="submit" className={`w-full py-6 rounded-[1.8rem] font-black uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-3 shadow-xl ${success ? 'bg-emerald-500 text-white' : 'bg-slate-900 text-white hover:bg-indigo-600 active:scale-95 shadow-indigo-100'}`}>
                 {loading ? <Loader2 className="animate-spin" /> : success ? <CheckCircle2 /> : <Save size={20} />}
                 <span>{success ? "Success" : "Deploy Product"}</span>
@@ -217,7 +229,7 @@ export default function AddMedicine() {
                 </div>
               </div>
 
-              <div className="space-y-4 overflow-y-auto max-h-[850px] pr-2 custom-scrollbar flex-1">
+              <div className="space-y-4 overflow-y-auto max-h-[850px] pr-2 flex-1">
                 {loadingList ? (
                   <div className="flex flex-col items-center justify-center py-20 gap-3">
                     <Loader2 className="animate-spin text-indigo-500" size={32} />
