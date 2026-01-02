@@ -1,9 +1,9 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { db } from "@/lib/firebase";
 import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
 import Link from "next/link";
-import { useRouter } from "next/navigation"; // ১. useRouter ইম্পোর্ট করুন
 import { useAuth } from "@/context/AuthContext";
 import { ShoppingCart, Eye, Search, Filter } from "lucide-react";
 
@@ -16,26 +16,41 @@ interface Medicine {
   description?: string;
 }
 
-export default function MedicinesPage() {
+// মূল কন্টেন্টকে একটি আলাদা ফাংশনে রাখা হয়েছে Suspense ব্যবহারের জন্য
+function MedicinesContent() {
   const { user } = useAuth();
-  const router = useRouter(); // ২. রাউটার ডিক্লেয়ার করুন
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  
+  // URL থেকে ক্যাটাগরি প্যারামিটার নেয়া (যেমন: /medicines?cat=syrup)
+  const categoryFromUrl = searchParams.get("cat");
+
   const [medicines, setMedicines] = useState<Medicine[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchTerm, setSearchTerm] = useState("");
 
-// MedicinesPage এর ভেতরে এই অ্যারেটি রিপ্লেস করুন
-const categories = [
-  "All", 
-  "Medicine", 
-  "syrup", 
-  "baby-mother-care", 
-  "diabetic-care",
-  "personal-care", 
-  "otc-medicine", 
-  "family-planning", 
-  "medical-devices"
-];
+  const categories = [
+    "All", 
+    "medicine", 
+    "syrup", 
+    "baby-mother-care", 
+    "diabetic-care",
+    "personal-care", 
+    "otc-medicine", 
+    "family-planning", 
+    "medical-devices",
+    "injections" // আপনার ক্যাটাগরি গ্রিডে ইনজেকশন আছে তাই এখানেও যোগ করা হয়েছে
+  ];
+
+  // URL প্যারামিটার পরিবর্তন হলে selectedCategory স্টেট আপডেট হবে
+  useEffect(() => {
+    if (categoryFromUrl && categories.includes(categoryFromUrl)) {
+      setSelectedCategory(categoryFromUrl);
+    } else {
+      setSelectedCategory("All");
+    }
+  }, [categoryFromUrl]);
 
   useEffect(() => {
     setLoading(true);
@@ -53,8 +68,22 @@ const categories = [
     return () => unsubscribe();
   }, []);
 
-  // ৩. আপডেট করা হ্যান্ডলার ফাংশন
+  const filteredMedicines = medicines.filter(med => {
+    const categoryMatch = 
+      selectedCategory === "All" || 
+      med.category.toLowerCase() === selectedCategory.toLowerCase();
+    
+    const searchMatch = med.name.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    return categoryMatch && searchMatch;
+  });
+
   const handleAddToCart = (medicine: Medicine) => {
+    if (user?.email === "admin@gmail.com") {
+      router.push("/admin/orders");
+      return;
+    }
+
     let cart = JSON.parse(localStorage.getItem("cart") || "[]");
     const existingItemIndex = cart.findIndex((item: any) => item.id === medicine.id);
     
@@ -72,16 +101,8 @@ const categories = [
     }
     
     localStorage.setItem("cart", JSON.stringify(cart));
-    
-    // সরাসরি কার্ট পেজে রিডাইরেক্ট (আপনার পাথ অনুযায়ী /user/cart)
     router.push("/user/cart"); 
   };
-
-  const filteredMedicines = medicines.filter(med => {
-    const categoryMatch = selectedCategory === "All" || med.category === selectedCategory;
-    const searchMatch = med.name.toLowerCase().includes(searchTerm.toLowerCase());
-    return categoryMatch && searchMatch;
-  });
 
   return (
     <div className="p-6 lg:p-12 max-w-7xl mx-auto min-h-screen bg-slate-50/50">
@@ -114,10 +135,12 @@ const categories = [
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="pl-12 pr-10 py-4 bg-white border-none rounded-2xl outline-none ring-1 ring-slate-100 focus:ring-2 focus:ring-emerald-500 font-bold shadow-sm appearance-none cursor-pointer"
+              className="pl-12 pr-10 py-4 bg-white border-none rounded-2xl outline-none ring-1 ring-slate-100 focus:ring-2 focus:ring-emerald-500 font-bold shadow-sm appearance-none cursor-pointer uppercase text-xs tracking-widest"
             >
               {categories.map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
+                <option key={cat} value={cat}>
+                  {cat === "All" ? "All Categories" : cat.replace(/-/g, ' ')}
+                </option>
               ))}
             </select>
           </div>
@@ -132,7 +155,6 @@ const categories = [
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-14">
           {filteredMedicines.map(medicine => (
             <div key={medicine.id} className="group flex flex-col h-full">
-              {/* Image Container */}
               <div className="relative aspect-[4/5] w-full bg-white rounded-[2rem] overflow-hidden shadow-sm transition-all duration-700 hover:shadow-2xl hover:-translate-y-2 border border-slate-50">
                 <img
                   src={medicine.imageUrl || "https://via.placeholder.com/600x750?text=Premium+Medicine"}
@@ -142,7 +164,7 @@ const categories = [
                 
                 <div className="absolute top-6 left-6">
                   <span className="backdrop-blur-xl bg-white/70 text-slate-800 text-[9px] font-black px-4 py-2 rounded-xl uppercase tracking-widest shadow-sm border border-white/50">
-                    {medicine.category}
+                    {medicine.category.replace(/-/g, ' ')}
                   </span>
                 </div>
 
@@ -155,7 +177,6 @@ const categories = [
                 </div>
               </div>
 
-              {/* Content Section */}
               <div className="pt-6 px-2 flex-1 flex flex-col">
                 <div className="flex justify-between items-start mb-2">
                   <h3 className="text-xl font-black text-slate-800 tracking-tight group-hover:text-emerald-500 transition-colors duration-300">
@@ -164,15 +185,16 @@ const categories = [
                   <span className="text-xl font-black text-slate-900 tracking-tighter">৳{medicine.price}</span>
                 </div>
                 
-                <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-6 leading-relaxed">
+                <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-6 leading-relaxed line-clamp-2">
                   {medicine.description || "Limited Edition Clinical Grade"}
                 </p>
                 
                 <button 
                   onClick={() => handleAddToCart(medicine)}
-                  className="w-full mt-auto flex items-center justify-center gap-3 bg-slate-900 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-lg shadow-slate-900/20 hover:bg-emerald-500 transition-all active:scale-95"
+                  className="w-full mt-auto flex items-center justify-center gap-3 bg-slate-900 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-lg hover:bg-emerald-500 transition-all active:scale-95"
                 >
-                  <ShoppingCart size={16} /> Add to Cart
+                  <ShoppingCart size={16} /> 
+                  {user?.email === "admin@gmail.com" ? "View Orders" : "Add to Cart"}
                 </button>
               </div>
             </div>
@@ -182,9 +204,18 @@ const categories = [
 
       {!loading && filteredMedicines.length === 0 && (
         <div className="text-center py-32 bg-white rounded-[4rem] border border-dashed border-slate-200">
-          <p className="text-slate-300 font-black uppercase tracking-[0.3em] text-sm">Stock Unavailable</p>
+          <p className="text-slate-300 font-black uppercase tracking-[0.3em] text-sm">No items found in this category</p>
         </div>
       )}
     </div>
+  );
+}
+
+// Next.js এ useSearchParams ব্যবহার করলে Suspense দিয়ে র‍্যাপ করা বাধ্যতামূলক
+export default function MedicinesPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center uppercase font-black tracking-widest text-slate-400">Loading Pharmacy...</div>}>
+      <MedicinesContent />
+    </Suspense>
   );
 }
