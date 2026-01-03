@@ -39,6 +39,16 @@ const AdminMenu = () => {
         </Link>
       </li>
 
+      {/* --- নতুন লিঙ্ক এখানে যোগ করা হয়েছে --- */}
+    <li>
+  <Link 
+    href="/admin/prescriptions" // <--- এখানে 'manage-' অংশটি বাদ দিন
+    className="py-3 px-4 text-slate-200 hover:bg-emerald-500 hover:text-white transition-all rounded-xl mb-1 font-bold flex items-center gap-3 active:scale-95"
+  >
+    <span className="text-lg">📄</span> Manage Prescriptions
+  </Link>
+</li>
+
       <div className="h-[1px] bg-slate-800 my-3 mx-2"></div>
 
       <li>

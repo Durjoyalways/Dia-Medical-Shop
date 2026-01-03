@@ -2,7 +2,8 @@
 import React from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
-import { User, ShoppingBag, LogOut, ShoppingCart } from "lucide-react";
+// FileText আইকনটি এখানে অ্যাড করা হয়েছে
+import { User, ShoppingBag, LogOut, ShoppingCart, FileText } from "lucide-react";
 
 const UserMenu = () => {
   const { logout, user } = useAuth();
@@ -29,6 +30,13 @@ const UserMenu = () => {
       <li>
         <Link href="/user/my-orders" className="flex items-center gap-3 py-3 hover:bg-emerald-500 hover:text-[#0f172a] font-bold rounded-xl transition-all">
           <ShoppingBag size={16} /> My Orders
+        </Link>
+      </li>
+
+      {/* --- নতুন Prescription লিঙ্ক এখানে যোগ করা হয়েছে --- */}
+      <li>
+        <Link href="/user/my-prescriptions" className="flex items-center gap-3 py-3 hover:bg-emerald-500 hover:text-[#0f172a] font-bold rounded-xl transition-all">
+          <FileText size={16} /> My Prescriptions
         </Link>
       </li>
       
