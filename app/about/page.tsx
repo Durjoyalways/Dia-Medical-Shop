@@ -10,13 +10,11 @@ export default function About() {
   return (
     <div className="min-h-screen bg-white text-slate-900 overflow-x-hidden">
       
-      {/* --- 1. HERO SECTION (Parallax & Fade Effect) --- */}
+      {/* --- 1. HERO SECTION --- */}
       <section className="relative py-28 lg:py-48 bg-[#0f172a] flex items-center justify-center">
         <div className="absolute inset-0 overflow-hidden">
-          {/* Animated Glow Orbs */}
           <div className="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] bg-emerald-500/20 rounded-full blur-[120px] animate-pulse"></div>
           <div className="absolute bottom-[-10%] right-[-20%] w-[700px] h-[700px] bg-blue-600/20 rounded-full blur-[140px] animate-pulse delay-700"></div>
-          {/* Grid Pattern Overlay */}
           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
         </div>
         
@@ -34,21 +32,21 @@ export default function About() {
         </div>
       </section>
 
-      {/* --- 2. STATS SECTION (Slide-in-from-Bottom Animation) --- */}
+      {/* --- 2. STATS SECTION (TypeScript Error Fixed) --- */}
       <section className="py-12 -mt-24 container mx-auto px-6 relative z-20">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
           {[
-            { label: "Successful Deliveries", value: "100k+", icon: <Truck />, delay: "delay-100" },
-            { label: "Original Medicine", value: "100%", icon: <ShieldCheck />, delay: "delay-200" },
-            { label: "Expert Pharmacists", value: "24/7", icon: <Stethoscope />, delay: "delay-300" },
-            { label: "Govt. Approved", value: "Verified", icon: <Award />, delay: "delay-400" },
+            { label: "Successful Deliveries", value: "100k+", IconComponent: Truck, delay: "delay-100" },
+            { label: "Original Medicine", value: "100%", IconComponent: ShieldCheck, delay: "delay-200" },
+            { label: "Expert Pharmacists", value: "24/7", IconComponent: Stethoscope, delay: "delay-300" },
+            { label: "Govt. Approved", value: "Verified", IconComponent: Award, delay: "delay-400" },
           ].map((stat, i) => (
             <div 
               key={i} 
               className={`bg-white p-10 rounded-[3rem] shadow-2xl shadow-slate-200/60 border border-slate-50 flex flex-col items-center group hover:-translate-y-4 transition-all duration-500 animate-in fade-in slide-in-from-bottom-20 ${stat.delay} fill-mode-both`}
             >
               <div className="bg-slate-900 text-white p-5 rounded-2xl mb-6 group-hover:bg-emerald-500 group-hover:rotate-[360deg] transition-all duration-700 shadow-xl">
-                {React.cloneElement(stat.icon as React.ReactElement, { size: 28 })}
+                <stat.IconComponent size={28} />
               </div>
               <h4 className="text-3xl font-black text-slate-800 tracking-tighter">{stat.value}</h4>
               <p className="text-slate-400 text-[10px] font-black uppercase mt-2 tracking-widest">{stat.label}</p>
@@ -57,10 +55,9 @@ export default function About() {
         </div>
       </section>
 
-      {/* --- 3. CORE STORY SECTION (Reveal on Scroll Effect) --- */}
+      {/* --- 3. CORE STORY SECTION --- */}
       <section className="py-32 container mx-auto px-6 overflow-hidden">
         <div className="grid lg:grid-cols-2 gap-24 items-center">
-          {/* Image Side with Scale-up on scroll feel */}
           <div className="relative group animate-in fade-in slide-in-from-left-20 duration-1000">
             <div className="rounded-[4rem] overflow-hidden shadow-[0_50px_100px_-20px_rgba(0,0,0,0.3)] border-[16px] border-white relative z-10 transition-all duration-700 hover:scale-[1.03]">
               <img 
@@ -69,14 +66,12 @@ export default function About() {
                 className="w-full h-[650px] object-cover"
               />
             </div>
-            {/* Floating License Plate */}
             <div className="absolute -bottom-10 -right-5 bg-emerald-500 p-10 rounded-[3.5rem] shadow-2xl text-white z-20 hidden lg:block animate-bounce-slow">
               <p className="text-[10px] font-black uppercase tracking-widest opacity-80 mb-2">Government Authorized</p>
               <h5 className="font-black text-2xl tracking-tighter">License: 12345678-DIA</h5>
             </div>
           </div>
 
-          {/* Text Side with Slide-in from Right */}
           <div className="space-y-12 animate-in fade-in slide-in-from-right-20 duration-1000">
             <div className="space-y-4">
               <h2 className="text-5xl lg:text-7xl font-black text-slate-900 leading-none uppercase tracking-tighter">
@@ -91,12 +86,12 @@ export default function About() {
             
             <div className="grid gap-6">
               {[
-                { title: "Direct Lab Sourcing", desc: "No middle-man. No fake products. 100% Direct.", icon: <ShieldCheck /> },
-                { title: "Express Logistics", desc: "Our own bike fleet ensures delivery within 2 hours.", icon: <Truck /> },
+                { title: "Direct Lab Sourcing", desc: "No middle-man. No fake products. 100% Direct.", IconComp: ShieldCheck },
+                { title: "Express Logistics", desc: "Our own bike fleet ensures delivery within 2 hours.", IconComp: Truck },
               ].map((item, i) => (
                 <div key={i} className="flex gap-8 p-10 rounded-[3rem] bg-slate-50 border border-slate-100 hover:bg-white hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 group cursor-default">
                   <div className="w-16 h-16 shrink-0 rounded-2xl bg-slate-900 text-white flex items-center justify-center group-hover:bg-emerald-500 transition-colors">
-                    {React.cloneElement(item.icon as React.ReactElement, { size: 28 })}
+                    <item.IconComp size={28} />
                   </div>
                   <div>
                     <h4 className="font-black text-slate-800 uppercase text-md tracking-wider mb-2">{item.title}</h4>
@@ -109,10 +104,9 @@ export default function About() {
         </div>
       </section>
 
-      {/* --- 4. CTA SECTION (Interactive Zoom Effect) --- */}
+      {/* --- 4. CTA SECTION --- */}
       <section className="py-24 container mx-auto px-6 mb-20 animate-in fade-in zoom-in duration-1000">
         <div className="bg-[#0f172a] rounded-[5rem] p-16 lg:p-32 text-center relative overflow-hidden shadow-[0_40px_100px_-20px_rgba(16,185,129,0.3)]">
-          {/* Moving Background Orbs */}
           <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-500/10 rounded-full -mr-40 -mt-40 blur-[100px] animate-pulse"></div>
           
           <div className="relative z-10 max-w-4xl mx-auto">
@@ -131,7 +125,7 @@ export default function About() {
         </div>
       </section>
 
-      {/* Custom Styles for Animation */}
+      {/* Animations */}
       <style jsx global>{`
         @keyframes spin-slow {
           from { transform: rotate(0deg); }
