@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { db } from "@/lib/firebase";
 import { collection, query, where, orderBy, onSnapshot, doc, updateDoc, getDoc } from "firebase/firestore";
 import { useAuth } from "@/context/AuthContext";
@@ -8,7 +8,8 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import Swal from "sweetalert2";
 
-export default function MyOrders() {
+// ১. মূল কন্টেন্ট ফাংশন যেখানে সব লজিক থাকবে
+function MyOrdersContent() {
   const { user } = useAuth();
   const searchParams = useSearchParams();
   const [orders, setOrders] = useState<any[]>([]);
@@ -35,7 +36,6 @@ export default function MyOrders() {
               });
             }
 
-            // --- FIXED: borderRadius removed and customClass added ---
             Swal.fire({
               title: "Payment Successful!",
               text: "Your order has been confirmed and is being processed.",
@@ -43,7 +43,7 @@ export default function MyOrders() {
               confirmButtonColor: "#10b981",
               background: "#ffffff",
               customClass: {
-                popup: 'rounded-[2.5rem]', // পপ-আপ রাউন্ড করার সঠিক পদ্ধতি
+                popup: 'rounded-[2.5rem]',
                 title: 'font-black uppercase tracking-tight',
                 confirmButton: 'rounded-xl px-10 py-3 font-black uppercase text-xs tracking-widest'
               }
@@ -194,5 +194,19 @@ export default function MyOrders() {
         </div>
       )}
     </div>
+  );
+}
+
+// ২. মূল এক্সপোর্ট যা Suspense দিয়ে মোড়ানো (এটি বিল্ড এরর ফিক্স করবে)
+export default function MyOrders() {
+  return (
+    <Suspense fallback={
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <span className="loading loading-ring loading-lg text-emerald-500"></span>
+        <p className="mt-4 text-slate-400 font-bold uppercase tracking-widest text-xs">Loading History...</p>
+      </div>
+    }>
+      <MyOrdersContent />
+    </Suspense>
   );
 }
