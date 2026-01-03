@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react"; // useRef যোগ করা হয়েছে
+import { useState, useEffect, useRef } from "react";
 import { db } from "@/lib/firebase";
 import { collection, query, where, orderBy, onSnapshot, doc, updateDoc, getDoc } from "firebase/firestore";
 import { useAuth } from "@/context/AuthContext";
@@ -13,24 +13,21 @@ export default function MyOrders() {
   const searchParams = useSearchParams();
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const hasUpdated = useRef(false); // একই আপডেট বারবার হওয়া রোধ করতে
+  const hasUpdated = useRef(false);
 
-  // ১. পেমেন্ট সাকসেস হ্যান্ডেল করার জন্য useEffect
   useEffect(() => {
     const paymentStatus = searchParams.get("payment");
     const tranId = searchParams.get("tranId");
 
     const updatePaymentStatus = async () => {
-      // যদি সাকসেস হয় এবং আমরা আগে আপডেট না করে থাকি
       if (paymentStatus === "success" && tranId && !hasUpdated.current) {
-        hasUpdated.current = true; // ফ্ল্যাগ সেট করা হলো
+        hasUpdated.current = true;
         
         try {
           const orderRef = doc(db, "orders", tranId);
           const orderSnap = await getDoc(orderRef);
 
           if (orderSnap.exists()) {
-            // শুধুমাত্র যদি আগে থেকে "Paid" না থাকে তবেই আপডেট করবে
             if (orderSnap.data().paymentStatus !== "Paid") {
               await updateDoc(orderRef, {
                 paymentStatus: "Paid",
@@ -38,17 +35,21 @@ export default function MyOrders() {
               });
             }
 
+            // --- FIXED: borderRadius removed and customClass added ---
             Swal.fire({
               title: "Payment Successful!",
               text: "Your order has been confirmed and is being processed.",
               icon: "success",
               confirmButtonColor: "#10b981",
               background: "#ffffff",
-              borderRadius: "2rem"
+              customClass: {
+                popup: 'rounded-[2.5rem]', // পপ-আপ রাউন্ড করার সঠিক পদ্ধতি
+                title: 'font-black uppercase tracking-tight',
+                confirmButton: 'rounded-xl px-10 py-3 font-black uppercase text-xs tracking-widest'
+              }
             });
           }
           
-          // URL পরিষ্কার করা (যাতে পেজ রিফ্রেশ করলে বারবার এলার্ট না আসে)
           window.history.replaceState(null, "", "/user/my-orders");
         } catch (error) {
           console.error("Firestore Update Error:", error);
@@ -59,6 +60,9 @@ export default function MyOrders() {
           text: "Something went wrong with the transaction. Please try again.",
           icon: "error",
           confirmButtonColor: "#ef4444",
+          customClass: {
+            popup: 'rounded-[2.5rem]'
+          }
         });
         window.history.replaceState(null, "", "/user/my-orders");
       }
@@ -67,7 +71,6 @@ export default function MyOrders() {
     updatePaymentStatus();
   }, [searchParams]);
 
-  // ২. অর্ডার ডেটা ফেচ করার জন্য useEffect (Real-time listener)
   useEffect(() => {
     if (!user) return;
 
@@ -136,7 +139,6 @@ export default function MyOrders() {
             <div key={order.id} className="group bg-white border border-slate-100 p-6 md:p-8 rounded-[2.5rem] hover:shadow-2xl hover:shadow-slate-200/50 transition-all duration-500">
               <div className="flex flex-col lg:flex-row justify-between gap-8">
                 
-                {/* Order Meta */}
                 <div className="space-y-4">
                   <div className="flex flex-wrap items-center gap-3">
                     <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${getStatusStyle(order.status)}`}>
@@ -153,7 +155,6 @@ export default function MyOrders() {
                     Order ID: <span className="text-slate-400 font-mono text-sm ml-1 uppercase">#{order.id.slice(0, 10)}</span>
                   </h3>
                   
-                  {/* Items Preview */}
                   <div className="flex -space-x-3 overflow-hidden pt-2">
                     {order.items?.map((item: any, i: number) => (
                       <div key={i} title={item.name} className="inline-block h-10 w-10 rounded-xl ring-4 ring-white bg-slate-50 flex items-center justify-center text-[10px] font-black text-slate-500 border border-slate-100 uppercase">
@@ -163,7 +164,6 @@ export default function MyOrders() {
                   </div>
                 </div>
 
-                {/* Pricing & Action */}
                 <div className="flex flex-row lg:flex-col justify-between lg:justify-center items-center lg:items-end gap-4 lg:border-l border-slate-50 lg:pl-12">
                   <div className="text-left lg:text-right">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Payable</p>
